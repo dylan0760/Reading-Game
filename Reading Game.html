@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Reading Game for Kids</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            background-color: #f0f8ff; /* Light blue background */
+            text-align: center;
+            flex-direction: column; /* Stack elements vertically */
+        }
+
+        #game-container {
+            background-color: #fff;
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+            width: 90%;
+            max-width: 500px;
+        }
+
+        #instruction {
+            font-size: 1.8em; /* Larger font for easy reading */
+            margin-bottom: 30px;
+            color: #333;
+            min-height: 50px; /* Ensure space even if text is short */
+        }
+
+        #options-container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            flex-wrap: wrap; /* Allow shapes to wrap on smaller screens */
+            gap: 20px; /* Space between shapes */
+            margin-bottom: 20px;
+            min-height: 100px; /* Ensure space for shapes */
+        }
+
+        .shape {
+            width: 80px;
+            height: 80px;
+            cursor: pointer;
+            border: 2px solid transparent; /* For visual feedback on click */
+            transition: transform 0.2s ease, border-color 0.2s ease;
+        }
+
+        .shape:hover {
+            transform: scale(1.1);
+        }
+
+        .shape.circle {
+            border-radius: 50%;
+        }
+
+        .shape.square {
+            border-radius: 0;
+        }
+
+        .shape.triangle {
+            width: 0;
+            height: 0;
+            border-left: 40px solid transparent;
+            border-right: 40px solid transparent;
+            border-bottom-width: 80px;
+            border-bottom-style: solid;
+            background-color: transparent !important; /* Triangle uses border color */
+        }
+        /* Specific colors need to override default background */
+        .shape.triangle.red { border-bottom-color: red; }
+        .shape.triangle.blue { border-bottom-color: blue; }
+        .shape.triangle.green { border-bottom-color: green; }
+        .shape.triangle.yellow { border-bottom-color: yellow; }
+        .shape.triangle.orange { border-bottom-color: orange; }
+        .shape.triangle.purple { border-bottom-color: purple; }
+
+
+        #feedback {
+            font-size: 1.4em;
+            margin-top: 20px;
+            min-height: 30px; /* Reserve space */
+            font-weight: bold;
+        }
+
+        .correct {
+            color: #28a745; /* Green */
+        }
+
+        .incorrect {
+            color: #dc3545; /* Red */
+        }
+
+        button#start-button {
+            padding: 15px 30px;
+            font-size: 1.2em;
+            cursor: pointer;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            transition: background-color 0.2s ease;
+        }
+
+        button#start-button:hover {
+            background-color: #0056b3;
+        }
+
+    </style>
+</head>
+<body>
+
+    <div id="game-container">
+        <h1 style="color: #0056b3;">Read and Click!</h1>
+        <div id="instruction">Press Start to play!</div>
+        <div id="options-container">
+            <!-- Shapes will be added here by JavaScript -->
+        </div>
+        <div id="feedback"></div>
+        <button id="start-button">Start Game</button>
+    </div>
+
+    <script>
+        const instructionElement = document.getElementById('instruction');
+        const optionsContainer = document.getElementById('options-container');
+        const feedbackElement = document.getElementById('feedback');
+        const startButton = document.getElementById('start-button');
+
+        const shapes = ['circle', 'square', 'triangle'];
+        const colors = ['red', 'blue', 'green', 'yellow', 'orange', 'purple'];
+        const colorNames = ['red', 'blue', 'green', 'yellow', 'orange', 'purple']; // Keep names consistent for instructions
+
+        let currentCorrectOption = null;
+        let canClick = false; // Prevent clicking before game starts or during feedback delay
+
+        function getRandomElement(arr) {
+            return arr[Math.floor(Math.random() * arr.length)];
+        }
+
+        // Function to shuffle array elements (Fisher-Yates shuffle)
+        function shuffleArray(array) {
+            for (let i = array.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [array[i], array[j]] = [array[j], array[i]];
+            }
+        }
+
+        function generateOptions(numOptions = 4) {
+            const options = [];
+            const usedCombinations = new Set();
+
+            // 1. Create the correct option
+            const correctShape = getRandomElement(shapes);
+            const correctColor = getRandomElement(colors);
+            const correctColorName = colorNames[colors.indexOf(correctColor)]; // Get matching name
+            currentCorrectOption = { shape: correctShape, color: correctColor, colorName: correctColorName };
+            options.push(currentCorrectOption);
+            usedCombinations.add(`${correctShape}-${correctColor}`);
+
+            // 2. Create distractor options
+            while (options.length < numOptions) {
+                const distractorShape = getRandomElement(shapes);
+                const distractorColor = getRandomElement(colors);
+                const combination = `${distractorShape}-${distractorColor}`;
+
+                // Ensure the distractor is different from the correct one and not already added
+                if (!usedCombinations.has(combination)) {
+                    const distractorColorName = colorNames[colors.indexOf(distractorColor)];
+                    options.push({ shape: distractorShape, color: distractorColor, colorName: distractorColorName });
+                    usedCombinations.add(combination);
+                }
+            }
+
+            // 3. Shuffle the options so the correct one isn't always first
+            shuffleArray(options);
+            return options;
+        }
+
+        function displayTask() {
+            canClick = false; // Disable clicking initially
+            feedbackElement.textContent = '';
+            feedbackElement.className = ''; // Clear feedback style
+            optionsContainer.innerHTML = ''; // Clear previous options
+
+            const generatedOptions = generateOptions(4); // Generate 4 options (1 correct, 3 distractors)
+
+            // Display instruction
+            instructionElement.textContent = `Click the ${currentCorrectOption.colorName} ${currentCorrectOption.shape}.`;
+
+            // Display options
+            generatedOptions.forEach(option => {
+                const shapeElement = document.createElement('div');
+                shapeElement.classList.add('shape', option.shape, option.color);
+                shapeElement.style.backgroundColor = option.color; // Apply color style directly for circle/square
+
+                // Special handling for triangle color via border
+                if (option.shape === 'triangle') {
+                   shapeElement.style.borderBottomColor = option.color;
+                }
+
+                shapeElement.dataset.shape = option.shape; // Store data for checking answer
+                shapeElement.dataset.color = option.color;
+
+                shapeElement.addEventListener('click', handleOptionClick);
+                optionsContainer.appendChild(shapeElement);
+            });
+
+            canClick = true; // Enable clicking now that options are displayed
+        }
+
+        function handleOptionClick(event) {
+            if (!canClick) return; // Do nothing if clicking is disabled
+
+            canClick = false; // Disable further clicks immediately
+            const clickedElement = event.target;
+            const clickedShape = clickedElement.dataset.shape;
+            const clickedColor = clickedElement.dataset.color;
+
+            // Provide visual feedback on the clicked item
+            clickedElement.style.borderColor = '#333'; // Highlight clicked item border
+
+            if (clickedShape === currentCorrectOption.shape && clickedColor === currentCorrectOption.color) {
+                feedbackElement.textContent = 'Yay! Correct! 🎉';
+                feedbackElement.className = 'correct';
+                // Wait a bit, then load the next task
+                setTimeout(displayTask, 1500); // 1.5 second delay
+            } else {
+                feedbackElement.textContent = 'Oops! Try again. That was a ' + clickedColor + ' ' + clickedShape + '.';
+                feedbackElement.className = 'incorrect';
+                // Wait a bit longer on incorrect answer, then allow clicking again on the same task
+                 setTimeout(() => {
+                     // Reset border and allow clicking again on the *same* puzzle
+                     clickedElement.style.borderColor = 'transparent';
+                     feedbackElement.textContent = ''; // Clear feedback
+                     feedbackElement.className = '';
+                     canClick = true;
+                 }, 2500); // 2.5 second delay
+                // Or, to move to the next task even if wrong:
+                // setTimeout(displayTask, 2500);
+            }
+        }
+
+        startButton.addEventListener('click', () => {
+            startButton.style.display = 'none'; // Hide start button
+            instructionElement.textContent = 'Loading...'; // Initial message
+            setTimeout(displayTask, 500); // Short delay before first task
+        });
+
+    </script>
+
+</body>
+</html>

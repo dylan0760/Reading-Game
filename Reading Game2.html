@@ -1,0 +1,280 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Reading Game for Kids</title>
+    <style>
+        body {
+            font-family: sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            background-color: #f0f8ff; /* Light blue background */
+        }
+
+        #game-container {
+            background-color: #ffffff;
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            text-align: center;
+        }
+
+        #instruction {
+            font-size: 1.8em; /* Larger text for easy reading */
+            margin-bottom: 30px;
+            color: #333;
+            font-weight: bold;
+        }
+
+        #options-container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 20px; /* Space between shapes */
+            flex-wrap: wrap; /* Allow shapes to wrap on smaller screens */
+            min-height: 100px; /* Ensure container has height even when empty */
+        }
+
+        .shape {
+            width: 80px;
+            height: 80px;
+            cursor: pointer;
+            transition: transform 0.2s ease;
+            border: 2px solid transparent; /* For feedback */
+        }
+
+        .shape:hover {
+            transform: scale(1.1);
+        }
+
+        .shape.square {
+            border-radius: 0;
+        }
+
+        .shape.circle {
+            border-radius: 50%;
+        }
+
+        /* Specific colors */
+        .red { background-color: #ff4136; }
+        .blue { background-color: #0074d9; }
+        .green { background-color: #2ecc40; }
+        .yellow { background-color: #ffdc00; }
+
+        #feedback {
+            margin-top: 25px;
+            font-size: 1.5em;
+            font-weight: bold;
+            min-height: 1.5em; /* Reserve space */
+        }
+
+        .correct {
+            color: #2ecc40; /* Green */
+        }
+
+        .incorrect {
+            color: #ff4136; /* Red */
+        }
+
+        button {
+            margin-top: 20px;
+            padding: 10px 20px;
+            font-size: 1.2em;
+            cursor: pointer;
+            background-color: #0074d9;
+            color: white;
+            border: none;
+            border-radius: 5px;
+        }
+
+        button:disabled {
+            background-color: #cccccc;
+            cursor: not-allowed;
+        }
+    </style>
+</head>
+<body>
+
+    <div id="game-container">
+        <h1 style="font-size: 1.5em; color: #555;">Read and Click!</h1>
+        <div id="instruction">Press Start to begin!</div>
+        <div id="options-container">
+            <!-- Shapes will be added here by JavaScript -->
+        </div>
+        <div id="feedback"></div>
+        <button id="start-button">Start Game</button>
+    </div>
+
+    <script>
+        const instructionElement = document.getElementById('instruction');
+        const optionsContainer = document.getElementById('options-container');
+        const feedbackElement = document.getElementById('feedback');
+        const startButton = document.getElementById('start-button');
+
+        // --- Game Data ---
+        const questions = [
+            {
+                instruction: "Click the red square.",
+                options: [
+                    { color: 'red', shape: 'square', isCorrect: true },
+                    { color: 'blue', shape: 'square', isCorrect: false },
+                    { color: 'red', shape: 'circle', isCorrect: false }
+                ]
+            },
+            {
+                instruction: "Click the blue circle.",
+                options: [
+                    { color: 'blue', shape: 'square', isCorrect: false },
+                    { color: 'green', shape: 'circle', isCorrect: false },
+                    { color: 'blue', shape: 'circle', isCorrect: true }
+                ]
+            },
+            {
+                instruction: "Click the green square.",
+                options: [
+                    { color: 'green', shape: 'circle', isCorrect: false },
+                    { color: 'green', shape: 'square', isCorrect: true },
+                    { color: 'yellow', shape: 'square', isCorrect: false }
+                ]
+            },
+            {
+                instruction: "Click the yellow circle.",
+                options: [
+                    { color: 'yellow', shape: 'circle', isCorrect: true },
+                    { color: 'red', shape: 'circle', isCorrect: false },
+                    { color: 'yellow', shape: 'square', isCorrect: false }
+                ]
+            },
+             {
+                instruction: "Find the blue square.", // Using "Find" instead of "Click"
+                options: [
+                    { color: 'red', shape: 'square', isCorrect: false },
+                    { color: 'blue', shape: 'circle', isCorrect: false },
+                    { color: 'blue', shape: 'square', isCorrect: true }
+                ]
+            },
+            {
+                instruction: "Touch the red circle.", // Using "Touch" instead of "Click"
+                options: [
+                    { color: 'red', shape: 'circle', isCorrect: true },
+                    { color: 'red', shape: 'square', isCorrect: false },
+                    { color: 'green', shape: 'circle', isCorrect: false }
+                ]
+            }
+            // Add more questions here following the same structure
+        ];
+
+        let currentQuestionIndex = 0;
+        let shuffledQuestions = [];
+
+        // --- Functions ---
+
+        function shuffleArray(array) {
+            // Fisher-Yates (aka Knuth) Shuffle
+            for (let i = array.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [array[i], array[j]] = [array[j], array[i]];
+            }
+            return array;
+        }
+
+        function startGame() {
+            currentQuestionIndex = 0;
+            shuffledQuestions = shuffleArray([...questions]); // Shuffle a copy
+            startButton.style.display = 'none'; // Hide start button during game
+            feedbackElement.textContent = '';
+            displayQuestion();
+        }
+
+        function displayQuestion() {
+            if (currentQuestionIndex >= shuffledQuestions.length) {
+                endGame();
+                return;
+            }
+
+            const question = shuffledQuestions[currentQuestionIndex];
+            instructionElement.textContent = question.instruction;
+            optionsContainer.innerHTML = ''; // Clear previous options
+            feedbackElement.textContent = ''; // Clear previous feedback
+
+            // Shuffle options within the question for more variability
+            const shuffledOptions = shuffleArray([...question.options]);
+
+            shuffledOptions.forEach(option => {
+                const shapeElement = document.createElement('div');
+                shapeElement.classList.add('shape', option.color, option.shape);
+                shapeElement.dataset.correct = option.isCorrect; // Store correctness in data attribute
+                shapeElement.addEventListener('click', handleOptionClick);
+                optionsContainer.appendChild(shapeElement);
+            });
+        }
+
+        function handleOptionClick(event) {
+            // Prevent clicking multiple times quickly
+            disableOptions();
+
+            const clickedElement = event.target;
+            const isCorrect = clickedElement.dataset.correct === 'true';
+
+            if (isCorrect) {
+                feedbackElement.textContent = "Good job!";
+                feedbackElement.className = 'correct'; // Apply green color
+                // Optional: Add subtle visual feedback to the correct shape
+                clickedElement.style.border = '4px solid #2ecc40';
+
+                // Wait a moment, then move to the next question
+                setTimeout(() => {
+                    currentQuestionIndex++;
+                    displayQuestion();
+                }, 1000); // 1 second delay
+            } else {
+                feedbackElement.textContent = "Try again!";
+                feedbackElement.className = 'incorrect'; // Apply red color
+                 // Optional: Add subtle visual feedback to the incorrect shape
+                clickedElement.style.border = '4px solid #ff4136';
+                // Briefly show the wrong feedback, then allow trying again
+                 setTimeout(() => {
+                    feedbackElement.textContent = ''; // Clear feedback
+                    clickedElement.style.border = '2px solid transparent'; // Reset border
+                    enableOptions(); // Re-enable options after incorrect guess
+                 }, 1200); // 1.2 second delay
+            }
+        }
+
+        function disableOptions() {
+            const options = optionsContainer.querySelectorAll('.shape');
+            options.forEach(option => {
+                option.style.pointerEvents = 'none'; // Disable clicks
+                option.style.opacity = '0.7'; // Dim slightly
+            });
+        }
+
+        function enableOptions() {
+             const options = optionsContainer.querySelectorAll('.shape');
+            options.forEach(option => {
+                option.style.pointerEvents = 'auto'; // Enable clicks
+                option.style.opacity = '1'; // Restore opacity
+            });
+        }
+
+
+        function endGame() {
+            instructionElement.textContent = "All done!";
+            optionsContainer.innerHTML = ''; // Clear shapes
+            feedbackElement.textContent = "You did great reading!";
+            feedbackElement.className = 'correct';
+            startButton.textContent = 'Play Again?'; // Change button text
+            startButton.style.display = 'block'; // Show button again
+        }
+
+        // --- Event Listeners ---
+        startButton.addEventListener('click', startGame);
+
+    </script>
+
+</body>
+</html>
