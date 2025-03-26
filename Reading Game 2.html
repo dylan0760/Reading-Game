@@ -1,0 +1,329 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Solar System Reading Game</title>
+    <style>
+        body {
+            font-family: 'Arial Rounded MT Bold', 'Helvetica Rounded', Arial, sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: flex-start; /* Align content to the top */
+            min-height: 100vh;
+            margin: 0;
+            background: #000020; /* Dark blue space background */
+            color: white;
+            overflow: hidden; /* Prevent scrollbars from perspective */
+            padding-top: 20px; /* Add some space at the top */
+        }
+
+        #game-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            width: 100%;
+        }
+
+        #question-area {
+            background-color: rgba(255, 255, 255, 0.1);
+            padding: 15px 25px;
+            border-radius: 10px;
+            margin-bottom: 30px; /* Increased space below question */
+            font-size: 1.8em; /* Larger font for young children */
+            text-align: center;
+            min-height: 50px;
+            max-width: 80%;
+            border: 2px solid rgba(255, 255, 255, 0.5);
+        }
+
+        #solar-system-container {
+            width: 80vw; /* Responsive width */
+            max-width: 700px; /* Max size */
+            height: 40vh; /* Responsive height */
+            min-height: 300px;
+            margin-bottom: 20px;
+            position: relative;
+            perspective: 1000px; /* Creates the 3D space */
+        }
+
+        #solar-system {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            transform-style: preserve-3d;
+            /* Basic animation to make it feel dynamic */
+            animation: rotateSystem 180s linear infinite;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        @keyframes rotateSystem {
+            from { transform: rotateY(0deg); }
+            to { transform: rotateY(360deg); }
+        }
+
+        .planet {
+            position: absolute;
+            /* Reset flexbox alignment from parent */
+            top: 50%;
+            left: 50%;
+            border-radius: 50%;
+            transform-style: preserve-3d; /* If we add moons/rings later */
+            cursor: pointer;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            box-shadow: 0 0 10px rgba(255, 255, 255, 0.5);
+            display: flex; /* Use flexbox for label centering */
+            justify-content: center; /* Center label horizontally */
+            align-items: center; /* Center label vertically */
+        }
+
+        .planet:hover {
+            box-shadow: 0 0 20px white;
+            transform: scale(1.1); /* Slightly enlarge on hover */
+             /* Bring planet slightly forward relative to its orbit */
+             /* Note: Combining scale and existing transforms requires care */
+        }
+
+        .planet-label {
+            position: absolute;
+            /* Position label below the planet */
+            top: 110%; /* Adjust as needed based on planet size */
+            left: 50%;
+            transform: translateX(-50%); /* Center the label text */
+            color: white;
+            font-size: 1em; /* Adjust relative font size */
+            text-shadow: 1px 1px 3px black;
+            white-space: nowrap; /* Prevent name wrapping */
+            background-color: rgba(0, 0, 0, 0.4); /* Slight background for readability */
+            padding: 2px 5px;
+            border-radius: 3px;
+            pointer-events: none; /* Label shouldn't block clicks on planet */
+        }
+
+
+        #feedback-area {
+            font-size: 1.5em;
+            margin-top: 20px;
+            min-height: 30px;
+            text-align: center;
+            font-weight: bold;
+        }
+
+        .correct {
+            color: #4CAF50; /* Green */
+        }
+
+        .incorrect {
+            color: #F44336; /* Red */
+        }
+
+        #next-button {
+            padding: 12px 25px;
+            font-size: 1.2em;
+            cursor: pointer;
+            margin-top: 20px;
+            border: none;
+            border-radius: 5px;
+            background-color: #4a90e2; /* Blue button */
+            color: white;
+            transition: background-color 0.3s ease;
+            display: none; /* Hidden initially */
+        }
+
+        #next-button:hover {
+            background-color: #357abd;
+        }
+
+        /* --- Individual Planet Styles --- */
+        /* Sizes and colors are approximate representations */
+        #sun {
+            width: 80px;
+            height: 80px;
+            background: radial-gradient(circle, #ffcc00, #ffaa00, #ff8800);
+            box-shadow: 0 0 30px #ffcc00;
+            /* Sun is at the center, no orbit transform needed initially */
+            transform: translate(-50%, -50%); /* Center precisely */
+            cursor: default; /* Sun isn't clickable */
+             z-index: 10; /* Ensure sun is visually centered */
+        }
+         #sun .planet-label { display: none; } /* No label for sun */
+
+        /* Orbit transforms: rotateY moves along the orbit, translateZ sets distance */
+        #mercury { background-color: #A9A9A9; width: 15px; height: 15px; }
+        #venus { background-color: #E6D3A5; width: 25px; height: 25px; }
+        #earth { background: radial-gradient(circle, #6699cc 40%, #4CAF50 60%); width: 28px; height: 28px; }
+        #mars { background-color: #C1440E; width: 20px; height: 20px; }
+        #jupiter { background-color: #D8CAAF; width: 55px; height: 55px; }
+        #saturn { background-color: #E3DDBB; width: 45px; height: 45px; } /* Ring added via pseudo-element */
+         #saturn::after {
+             content: '';
+             position: absolute;
+             width: 180%; /* Ring width relative to planet */
+             height: 180%; /* Ring height relative to planet */
+             border: 4px solid rgba(210, 190, 150, 0.7); /* Ring color and thickness */
+             border-radius: 50%;
+             top: 50%;
+             left: 50%;
+             transform: translate(-50%, -50%) rotateX(75deg); /* Tilt the ring */
+             box-sizing: border-box; /* Include border in size */
+              pointer-events: none; /* Ring shouldn't block clicks */
+         }
+
+        #uranus { background-color: #AFDBF5; width: 35px; height: 35px; }
+        #neptune { background-color: #3B5998; width: 33px; height: 33px; }
+
+    </style>
+</head>
+<body>
+    <div id="game-container">
+        <div id="question-area">Loading question...</div>
+
+        <div id="solar-system-container">
+            <div id="solar-system">
+                <div id="sun" class="planet"></div>
+                <!-- Planets will be added here by JS -->
+            </div>
+        </div>
+
+        <div id="feedback-area"></div>
+        <button id="next-button">Next Question</button>
+    </div>
+
+    <script>
+        const solarSystem = document.getElementById('solar-system');
+        const questionArea = document.getElementById('question-area');
+        const feedbackArea = document.getElementById('feedback-area');
+        const nextButton = document.getElementById('next-button');
+
+        let currentTargetPlanetId = null;
+        let planetsClickable = true;
+
+        // Planet data: Facts should be simple and easily verifiable by reading the question
+        const planetsData = [
+            { id: 'mercury', name: 'Mercury', color: '#A9A9A9', size: 15, orbitRadius: 70, facts: ["is closest to the Sun", "is the smallest planet (not counting Pluto!)"] },
+            { id: 'venus', name: 'Venus', color: '#E6D3A5', size: 25, orbitRadius: 110, facts: ["is the hottest planet", "is sometimes called Earth's 'sister'"] },
+            { id: 'earth', name: 'Earth', color: '#6699cc', size: 28, orbitRadius: 150, facts: ["is our home planet", "is the only planet known to have liquid water on its surface"] },
+            { id: 'mars', name: 'Mars', color: '#C1440E', size: 20, orbitRadius: 200, facts: ["is known as the Red Planet", "has the largest volcano, Olympus Mons"] },
+            { id: 'jupiter', name: 'Jupiter', color: '#D8CAAF', size: 55, orbitRadius: 280, facts: ["is the largest planet", "has a Great Red Spot"] },
+            { id: 'saturn', name: 'Saturn', color: '#E3DDBB', size: 45, orbitRadius: 370, facts: ["has beautiful rings", "is the second largest planet"] },
+            { id: 'uranus', name: 'Uranus', color: '#AFDBF5', size: 35, orbitRadius: 450, facts: ["rotates on its side", "is an ice giant"] },
+            { id: 'neptune', name: 'Neptune', color: '#3B5998', size: 33, orbitRadius: 520, facts: ["is the farthest planet from the Sun (usually!)", "is very blue and stormy"] }
+            // Pluto can be added if desired, adjust facts accordingly
+        ];
+
+        // Function to get a random element from an array
+        function getRandomElement(arr) {
+            return arr[Math.floor(Math.random() * arr.length)];
+        }
+
+        // Function to create and position planet elements
+        function createPlanetElement(planetData, index, totalPlanets) {
+            const planetElement = document.createElement('div');
+            planetElement.id = planetData.id;
+            planetElement.className = 'planet';
+            planetElement.style.width = `${planetData.size}px`;
+            planetElement.style.height = `${planetData.size}px`;
+
+             // Set background based on data (handle Earth's gradient specifically if needed)
+            if (planetData.id === 'earth') {
+                 planetElement.style.background = 'radial-gradient(circle, #6699cc 40%, #4CAF50 60%)';
+            } else {
+                planetElement.style.backgroundColor = planetData.color;
+            }
+
+
+            // Distribute planets somewhat evenly around the orbit
+            const angle = (360 / totalPlanets) * index + Math.random() * 20 - 10; // Add slight randomness
+            const radius = planetData.orbitRadius; // Get orbit radius from data
+
+             // Adjust transform for combined orbit and centering
+             // translate(-50%, -50%) centers the planet div before rotation/translation
+            planetElement.style.transform = `translate(-50%, -50%) rotateY(${angle}deg) translateZ(${radius}px)`;
+
+             // Add Label
+            const labelElement = document.createElement('div');
+            labelElement.className = 'planet-label';
+            labelElement.textContent = planetData.name;
+            planetElement.appendChild(labelElement);
+
+
+            planetElement.addEventListener('click', handlePlanetClick);
+            solarSystem.appendChild(planetElement);
+        }
+
+        // Function to generate a new question
+        function generateQuestion() {
+            // 1. Clear previous state
+            feedbackArea.textContent = '';
+            feedbackArea.className = '';
+            nextButton.style.display = 'none';
+            planetsClickable = true;
+
+            // 2. Select a random planet
+            const targetPlanet = getRandomElement(planetsData);
+            currentTargetPlanetId = targetPlanet.id;
+
+            // 3. Decide question type (ask for name or based on fact)
+            const questionType = Math.random() < 0.5 ? 'name' : 'fact';
+            let questionText = '';
+
+            if (questionType === 'name' || targetPlanet.facts.length === 0) {
+                // Ask the child to find the planet by its name
+                questionText = `Read carefully: Click the planet named <strong>${targetPlanet.name}</strong>.`;
+            } else {
+                // Ask the child to find the planet based on a fact
+                const fact = getRandomElement(targetPlanet.facts);
+                // Phrase the question so reading the fact is necessary
+                questionText = `Read this: The planet that ${fact} is <strong>${targetPlanet.name}</strong>. Can you click on <strong>${targetPlanet.name}</strong>?`;
+                 // Alternative phrasing:
+                 // questionText = `Find the planet that ${fact}. Click it!`; // This relies more on prior knowledge or reading labels well
+            }
+
+            questionArea.innerHTML = questionText; // Use innerHTML to render the <strong> tag
+        }
+
+        // Function to handle clicking on a planet
+        function handlePlanetClick(event) {
+            if (!planetsClickable) return; // Do nothing if clicks are disabled
+
+            const clickedPlanetId = event.target.id;
+
+            if (clickedPlanetId === currentTargetPlanetId) {
+                feedbackArea.textContent = 'Correct! Well done reading!';
+                feedbackArea.className = 'correct';
+                planetsClickable = false; // Disable clicking until next question
+                nextButton.style.display = 'block'; // Show next button
+            } else {
+                // Only give feedback if a planet (not the container) was clicked
+                 if (event.target.classList.contains('planet')) {
+                     feedbackArea.textContent = 'Oops! Try reading the question again.';
+                     feedbackArea.className = 'incorrect';
+                 }
+            }
+        }
+
+        // Function to initialize the game
+        function initializeGame() {
+            // Create planet elements
+            planetsData.forEach((planet, index) => {
+                createPlanetElement(planet, index, planetsData.length);
+            });
+
+             // Add Saturn's ring style if Saturn exists (handled by CSS ::after now)
+
+            // Add event listener for the next button
+            nextButton.addEventListener('click', generateQuestion);
+
+            // Generate the first question
+            generateQuestion();
+        }
+
+        // Start the game when the DOM is loaded
+        document.addEventListener('DOMContentLoaded', initializeGame);
+
+    </script>
+</body>
+</html>
