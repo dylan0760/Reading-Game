@@ -3,326 +3,331 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Solar System Reading Game</title>
+    <title>Reading Game for Kids</title>
     <style>
         body {
-            font-family: 'Arial Rounded MT Bold', 'Helvetica Rounded', Arial, sans-serif;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: flex-start; /* Align content to the top */
-            min-height: 100vh;
-            margin: 0;
-            background: #000020; /* Dark blue space background */
-            color: white;
-            overflow: hidden; /* Prevent scrollbars from perspective */
-            padding-top: 20px; /* Add some space at the top */
-        }
-
-        #game-container {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            width: 100%;
-        }
-
-        #question-area {
-            background-color: rgba(255, 255, 255, 0.1);
-            padding: 15px 25px;
-            border-radius: 10px;
-            margin-bottom: 30px; /* Increased space below question */
-            font-size: 1.8em; /* Larger font for young children */
-            text-align: center;
-            min-height: 50px;
-            max-width: 80%;
-            border: 2px solid rgba(255, 255, 255, 0.5);
-        }
-
-        #solar-system-container {
-            width: 80vw; /* Responsive width */
-            max-width: 700px; /* Max size */
-            height: 40vh; /* Responsive height */
-            min-height: 300px;
-            margin-bottom: 20px;
-            position: relative;
-            perspective: 1000px; /* Creates the 3D space */
-        }
-
-        #solar-system {
-            position: absolute;
-            width: 100%;
-            height: 100%;
-            transform-style: preserve-3d;
-            /* Basic animation to make it feel dynamic */
-            animation: rotateSystem 180s linear infinite;
+            font-family: Arial, sans-serif;
             display: flex;
             justify-content: center;
             align-items: center;
-        }
-
-        @keyframes rotateSystem {
-            from { transform: rotateY(0deg); }
-            to { transform: rotateY(360deg); }
-        }
-
-        .planet {
-            position: absolute;
-            /* Reset flexbox alignment from parent */
-            top: 50%;
-            left: 50%;
-            border-radius: 50%;
-            transform-style: preserve-3d; /* If we add moons/rings later */
-            cursor: pointer;
-            transition: transform 0.3s ease, box-shadow 0.3s ease;
-            box-shadow: 0 0 10px rgba(255, 255, 255, 0.5);
-            display: flex; /* Use flexbox for label centering */
-            justify-content: center; /* Center label horizontally */
-            align-items: center; /* Center label vertically */
-        }
-
-        .planet:hover {
-            box-shadow: 0 0 20px white;
-            transform: scale(1.1); /* Slightly enlarge on hover */
-             /* Bring planet slightly forward relative to its orbit */
-             /* Note: Combining scale and existing transforms requires care */
-        }
-
-        .planet-label {
-            position: absolute;
-            /* Position label below the planet */
-            top: 110%; /* Adjust as needed based on planet size */
-            left: 50%;
-            transform: translateX(-50%); /* Center the label text */
-            color: white;
-            font-size: 1em; /* Adjust relative font size */
-            text-shadow: 1px 1px 3px black;
-            white-space: nowrap; /* Prevent name wrapping */
-            background-color: rgba(0, 0, 0, 0.4); /* Slight background for readability */
-            padding: 2px 5px;
-            border-radius: 3px;
-            pointer-events: none; /* Label shouldn't block clicks on planet */
-        }
-
-
-        #feedback-area {
-            font-size: 1.5em;
-            margin-top: 20px;
-            min-height: 30px;
+            min-height: 100vh;
+            background-color: #f0f8ff; /* Light blue background */
             text-align: center;
+            flex-direction: column; /* Stack elements vertically */
+        }
+        #game-container {
+            background-color: #fff;
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+            width: 90%;
+            max-width: 700px; /* Even wider for more shapes */
+        }
+        #score-display {
+            font-size: 1.5em;
+            color: #555;
+            margin-bottom: 15px;
             font-weight: bold;
         }
+        #instruction {
+            font-size: 1.8em; /* Larger font for easy reading */
+            margin-bottom: 30px;
+            color: #333;
+            min-height: 50px; /* Ensure space even if text is short */
+        }
+        #options-container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            flex-wrap: wrap; /* Allow shapes to wrap */
+            gap: 30px; /* Increased gap slightly */
+            margin-bottom: 20px;
+            min-height: 120px; /* Ensure space for shapes */
+            padding: 10px 0; /* Add some vertical padding */
+        }
+        .shape {
+            width: 80px; /* Base width */
+            height: 80px; /* Base height */
+            cursor: pointer;
+            border: 2px solid transparent; /* For visual feedback on click */
+            transition: transform 0.2s ease, border-color 0.2s ease;
+            background-color: gray; /* Default/placeholder - JS will override */
+            /* Ensure shapes align nicely if heights differ */
+            display: inline-flex;
+            justify-content: center;
+            align-items: center;
+            vertical-align: middle; /* Helps alignment in flex container */
+        }
+        .shape:hover {
+            transform: scale(1.1);
+        }
 
+        /* --- Basic Shapes --- */
+        .shape.circle {
+            border-radius: 50%;
+        }
+        .shape.square {
+            border-radius: 0; /* Already 80x80 */
+        }
+        .shape.oval {
+             width: 100px; /* Wider than height */
+             height: 60px; /* Shorter than width */
+             border-radius: 50%; /* Creates oval with different width/height */
+        }
+        /* --- *** NEW: Rectangle *** --- */
+        .shape.rectangle {
+             width: 110px; /* Distinctly wider than square */
+             height: 60px; /* Shorter */
+             border-radius: 0;
+        }
+
+
+        /* --- Triangle (using borders) --- */
+        .shape.triangle {
+            width: 0;
+            height: 0;
+            border-left: 40px solid transparent;
+            border-right: 40px solid transparent;
+            border-bottom-width: 80px;
+            border-bottom-style: solid;
+            background-color: transparent !important; /* Triangle uses border color */
+        }
+        /* Triangle colors override */
+        .shape.triangle.red { border-bottom-color: red; }
+        .shape.triangle.blue { border-bottom-color: blue; }
+        .shape.triangle.green { border-bottom-color: green; }
+        .shape.triangle.yellow { border-bottom-color: yellow; }
+        .shape.triangle.orange { border-bottom-color: orange; }
+        .shape.triangle.purple { border-bottom-color: purple; }
+        .shape.triangle.pink { border-bottom-color: pink; }
+        .shape.triangle.brown { border-bottom-color: brown; }
+        .shape.triangle.gray { border-bottom-color: gray; }
+
+
+        /* --- Polygon Shapes (using clip-path) --- */
+        /* These shapes use background-color set by JS */
+        .shape.hexagon {
+            clip-path: polygon(25% 0%, 75% 0%, 100% 50%, 75% 100%, 25% 100%, 0% 50%);
+        }
+        .shape.pentagon {
+            clip-path: polygon(50% 0%, 100% 38%, 82% 100%, 18% 100%, 0% 38%);
+        }
+        .shape.star {
+            clip-path: polygon(50% 0%, 61% 35%, 98% 35%, 68% 57%, 79% 91%, 50% 70%, 21% 91%, 32% 57%, 2% 35%, 39% 35%);
+        }
+        .shape.octagon {
+             clip-path: polygon(30% 0%, 70% 0%, 100% 30%, 100% 70%, 70% 100%, 30% 100%, 0% 70%, 0% 30%);
+        }
+        .shape.rhombus {
+            clip-path: polygon(50% 0%, 100% 50%, 50% 100%, 0% 50%);
+        }
+        .shape.semicircle {
+            width: 80px;
+            height: 40px; /* Half the height */
+            border-radius: 40px 40px 0 0; /* Round top corners */
+            background-clip: padding-box;
+            clip-path: none;
+        }
+        .shape.parallelogram {
+            clip-path: polygon(25% 0%, 100% 0%, 75% 100%, 0% 100%);
+        }
+        /* --- *** NEW: Trapezium *** --- */
+        .shape.trapezium {
+            /* Isosceles trapezium (like image) */
+            clip-path: polygon(20% 0%, 80% 0%, 100% 100%, 0% 100%);
+            /* Note: sometimes called trapezoid */
+        }
+
+
+        /* --- Feedback --- */
+        #feedback {
+            font-size: 1.4em;
+            margin-top: 20px;
+            min-height: 30px; /* Reserve space */
+            font-weight: bold;
+        }
         .correct {
-            color: #4CAF50; /* Green */
+            color: #28a745; /* Green */
         }
-
         .incorrect {
-            color: #F44336; /* Red */
+            color: #dc3545; /* Red */
         }
-
-        #next-button {
-            padding: 12px 25px;
+        button#start-button {
+            padding: 15px 30px;
             font-size: 1.2em;
             cursor: pointer;
-            margin-top: 20px;
-            border: none;
-            border-radius: 5px;
-            background-color: #4a90e2; /* Blue button */
+            background-color: #007bff;
             color: white;
-            transition: background-color 0.3s ease;
-            display: none; /* Hidden initially */
+            border: none;
+            border-radius: 8px;
+            transition: background-color 0.2s ease;
+            margin-top: 20px; /* More margin above button */
         }
-
-        #next-button:hover {
-            background-color: #357abd;
+        button#start-button:hover {
+            background-color: #0056b3;
         }
-
-        /* --- Individual Planet Styles --- */
-        /* Sizes and colors are approximate representations */
-        #sun {
-            width: 80px;
-            height: 80px;
-            background: radial-gradient(circle, #ffcc00, #ffaa00, #ff8800);
-            box-shadow: 0 0 30px #ffcc00;
-            /* Sun is at the center, no orbit transform needed initially */
-            transform: translate(-50%, -50%); /* Center precisely */
-            cursor: default; /* Sun isn't clickable */
-             z-index: 10; /* Ensure sun is visually centered */
-        }
-         #sun .planet-label { display: none; } /* No label for sun */
-
-        /* Orbit transforms: rotateY moves along the orbit, translateZ sets distance */
-        #mercury { background-color: #A9A9A9; width: 15px; height: 15px; }
-        #venus { background-color: #E6D3A5; width: 25px; height: 25px; }
-        #earth { background: radial-gradient(circle, #6699cc 40%, #4CAF50 60%); width: 28px; height: 28px; }
-        #mars { background-color: #C1440E; width: 20px; height: 20px; }
-        #jupiter { background-color: #D8CAAF; width: 55px; height: 55px; }
-        #saturn { background-color: #E3DDBB; width: 45px; height: 45px; } /* Ring added via pseudo-element */
-         #saturn::after {
-             content: '';
-             position: absolute;
-             width: 180%; /* Ring width relative to planet */
-             height: 180%; /* Ring height relative to planet */
-             border: 4px solid rgba(210, 190, 150, 0.7); /* Ring color and thickness */
-             border-radius: 50%;
-             top: 50%;
-             left: 50%;
-             transform: translate(-50%, -50%) rotateX(75deg); /* Tilt the ring */
-             box-sizing: border-box; /* Include border in size */
-              pointer-events: none; /* Ring shouldn't block clicks */
-         }
-
-        #uranus { background-color: #AFDBF5; width: 35px; height: 35px; }
-        #neptune { background-color: #3B5998; width: 33px; height: 33px; }
-
     </style>
 </head>
 <body>
     <div id="game-container">
-        <div id="question-area">Loading question...</div>
-
-        <div id="solar-system-container">
-            <div id="solar-system">
-                <div id="sun" class="planet"></div>
-                <!-- Planets will be added here by JS -->
-            </div>
+        <h1 style="color: #0056b3;">Read and Click!</h1>
+        <div id="score-display">Score: 0</div>
+        <div id="instruction">Press Start to play!</div>
+        <div id="options-container">
+            <!-- Shapes will be added here by JavaScript -->
         </div>
-
-        <div id="feedback-area"></div>
-        <button id="next-button">Next Question</button>
+        <div id="feedback"></div>
+        <button id="start-button">Start Game</button>
     </div>
 
     <script>
-        const solarSystem = document.getElementById('solar-system');
-        const questionArea = document.getElementById('question-area');
-        const feedbackArea = document.getElementById('feedback-area');
-        const nextButton = document.getElementById('next-button');
+        const instructionElement = document.getElementById('instruction');
+        const optionsContainer = document.getElementById('options-container');
+        const feedbackElement = document.getElementById('feedback');
+        const startButton = document.getElementById('start-button');
+        const scoreDisplayElement = document.getElementById('score-display');
 
-        let currentTargetPlanetId = null;
-        let planetsClickable = true;
-
-        // Planet data: Facts should be simple and easily verifiable by reading the question
-        const planetsData = [
-            { id: 'mercury', name: 'Mercury', color: '#A9A9A9', size: 15, orbitRadius: 70, facts: ["is closest to the Sun", "is the smallest planet (not counting Pluto!)"] },
-            { id: 'venus', name: 'Venus', color: '#E6D3A5', size: 25, orbitRadius: 110, facts: ["is the hottest planet", "is sometimes called Earth's 'sister'"] },
-            { id: 'earth', name: 'Earth', color: '#6699cc', size: 28, orbitRadius: 150, facts: ["is our home planet", "is the only planet known to have liquid water on its surface"] },
-            { id: 'mars', name: 'Mars', color: '#C1440E', size: 20, orbitRadius: 200, facts: ["is known as the Red Planet", "has the largest volcano, Olympus Mons"] },
-            { id: 'jupiter', name: 'Jupiter', color: '#D8CAAF', size: 55, orbitRadius: 280, facts: ["is the largest planet", "has a Great Red Spot"] },
-            { id: 'saturn', name: 'Saturn', color: '#E3DDBB', size: 45, orbitRadius: 370, facts: ["has beautiful rings", "is the second largest planet"] },
-            { id: 'uranus', name: 'Uranus', color: '#AFDBF5', size: 35, orbitRadius: 450, facts: ["rotates on its side", "is an ice giant"] },
-            { id: 'neptune', name: 'Neptune', color: '#3B5998', size: 33, orbitRadius: 520, facts: ["is the farthest planet from the Sun (usually!)", "is very blue and stormy"] }
-            // Pluto can be added if desired, adjust facts accordingly
+        // *** UPDATED: Added new shape names ***
+        const shapes = [
+            'circle', 'square', 'triangle', 'hexagon', 'star', 'oval', 'pentagon',
+            'octagon', 'rhombus', 'semicircle', 'parallelogram',
+            'rectangle', 'trapezium' // <-- Added Rectangle and Trapezium
         ];
+        const colors = ['red', 'blue', 'green', 'yellow', 'orange', 'purple', 'pink', 'brown', 'gray', 'cyan', 'magenta']; // Added more colors
+        // Assuming color names match CSS color values for simplicity
+        const colorNames = ['red', 'blue', 'green', 'yellow', 'orange', 'purple', 'pink', 'brown', 'gray', 'cyan', 'magenta'];
 
-        // Function to get a random element from an array
+        let currentCorrectOption = null;
+        let canClick = false;
+        let score = 0;
+
+        function updateScoreDisplay() {
+            scoreDisplayElement.textContent = 'Score: ' + score;
+        }
+
         function getRandomElement(arr) {
             return arr[Math.floor(Math.random() * arr.length)];
         }
 
-        // Function to create and position planet elements
-        function createPlanetElement(planetData, index, totalPlanets) {
-            const planetElement = document.createElement('div');
-            planetElement.id = planetData.id;
-            planetElement.className = 'planet';
-            planetElement.style.width = `${planetData.size}px`;
-            planetElement.style.height = `${planetData.size}px`;
-
-             // Set background based on data (handle Earth's gradient specifically if needed)
-            if (planetData.id === 'earth') {
-                 planetElement.style.background = 'radial-gradient(circle, #6699cc 40%, #4CAF50 60%)';
-            } else {
-                planetElement.style.backgroundColor = planetData.color;
-            }
-
-
-            // Distribute planets somewhat evenly around the orbit
-            const angle = (360 / totalPlanets) * index + Math.random() * 20 - 10; // Add slight randomness
-            const radius = planetData.orbitRadius; // Get orbit radius from data
-
-             // Adjust transform for combined orbit and centering
-             // translate(-50%, -50%) centers the planet div before rotation/translation
-            planetElement.style.transform = `translate(-50%, -50%) rotateY(${angle}deg) translateZ(${radius}px)`;
-
-             // Add Label
-            const labelElement = document.createElement('div');
-            labelElement.className = 'planet-label';
-            labelElement.textContent = planetData.name;
-            planetElement.appendChild(labelElement);
-
-
-            planetElement.addEventListener('click', handlePlanetClick);
-            solarSystem.appendChild(planetElement);
-        }
-
-        // Function to generate a new question
-        function generateQuestion() {
-            // 1. Clear previous state
-            feedbackArea.textContent = '';
-            feedbackArea.className = '';
-            nextButton.style.display = 'none';
-            planetsClickable = true;
-
-            // 2. Select a random planet
-            const targetPlanet = getRandomElement(planetsData);
-            currentTargetPlanetId = targetPlanet.id;
-
-            // 3. Decide question type (ask for name or based on fact)
-            const questionType = Math.random() < 0.5 ? 'name' : 'fact';
-            let questionText = '';
-
-            if (questionType === 'name' || targetPlanet.facts.length === 0) {
-                // Ask the child to find the planet by its name
-                questionText = `Read carefully: Click the planet named <strong>${targetPlanet.name}</strong>.`;
-            } else {
-                // Ask the child to find the planet based on a fact
-                const fact = getRandomElement(targetPlanet.facts);
-                // Phrase the question so reading the fact is necessary
-                questionText = `Read this: The planet that ${fact} is <strong>${targetPlanet.name}</strong>. Can you click on <strong>${targetPlanet.name}</strong>?`;
-                 // Alternative phrasing:
-                 // questionText = `Find the planet that ${fact}. Click it!`; // This relies more on prior knowledge or reading labels well
-            }
-
-            questionArea.innerHTML = questionText; // Use innerHTML to render the <strong> tag
-        }
-
-        // Function to handle clicking on a planet
-        function handlePlanetClick(event) {
-            if (!planetsClickable) return; // Do nothing if clicks are disabled
-
-            const clickedPlanetId = event.target.id;
-
-            if (clickedPlanetId === currentTargetPlanetId) {
-                feedbackArea.textContent = 'Correct! Well done reading!';
-                feedbackArea.className = 'correct';
-                planetsClickable = false; // Disable clicking until next question
-                nextButton.style.display = 'block'; // Show next button
-            } else {
-                // Only give feedback if a planet (not the container) was clicked
-                 if (event.target.classList.contains('planet')) {
-                     feedbackArea.textContent = 'Oops! Try reading the question again.';
-                     feedbackArea.className = 'incorrect';
-                 }
+        function shuffleArray(array) {
+            for (let i = array.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [array[i], array[j]] = [array[j], array[i]];
             }
         }
 
-        // Function to initialize the game
-        function initializeGame() {
-            // Create planet elements
-            planetsData.forEach((planet, index) => {
-                createPlanetElement(planet, index, planetsData.length);
+        // Consider increasing numOptions if desired, e.g., generateOptions(5) or 6
+        function generateOptions(numOptions = 4) {
+            const options = [];
+            const usedCombinations = new Set();
+
+            // Ensure the correct option is chosen first
+            const correctShape = getRandomElement(shapes);
+            const correctColor = getRandomElement(colors);
+            const correctColorName = colorNames[colors.indexOf(correctColor)];
+            currentCorrectOption = { shape: correctShape, color: correctColor, colorName: correctColorName };
+            options.push(currentCorrectOption);
+            usedCombinations.add(`${correctShape}-${correctColor}`);
+
+            // Generate distractors
+            let attempts = 0; // Failsafe counter
+            const maxAttempts = (shapes.length * colors.length) * 2; // Generous limit
+
+            while (options.length < numOptions && attempts < maxAttempts) {
+                const distractorShape = getRandomElement(shapes);
+                const distractorColor = getRandomElement(colors);
+                const combination = `${distractorShape}-${distractorColor}`;
+
+                if (!usedCombinations.has(combination)) {
+                    const distractorColorName = colorNames[colors.indexOf(distractorColor)];
+                    options.push({ shape: distractorShape, color: distractorColor, colorName: distractorColorName });
+                    usedCombinations.add(combination);
+                }
+                attempts++;
+            }
+             // Fill remaining slots if needed (unlikely but safe)
+             while (options.length < numOptions) {
+                 console.warn("Had to add a non-unique distractor option.");
+                 const distractorShape = getRandomElement(shapes);
+                 const distractorColor = getRandomElement(colors);
+                 const distractorColorName = colorNames[colors.indexOf(distractorColor)];
+                 options.push({ shape: distractorShape, color: distractorColor, colorName: distractorColorName });
+             }
+
+            shuffleArray(options);
+            return options;
+        }
+
+        function displayTask() {
+            canClick = false;
+            feedbackElement.textContent = '';
+            feedbackElement.className = '';
+            optionsContainer.innerHTML = '';
+
+            const generatedOptions = generateOptions(4); // Can change 4 to 5 or 6 for more options
+
+            instructionElement.textContent = `Click the ${currentCorrectOption.colorName} ${currentCorrectOption.shape}.`;
+
+            generatedOptions.forEach(option => {
+                const shapeElement = document.createElement('div');
+                shapeElement.classList.add('shape', option.shape);
+
+                // Set background color for all shapes EXCEPT triangle
+                if (option.shape !== 'triangle') {
+                    shapeElement.style.backgroundColor = option.color;
+                } else {
+                    // For triangle, add the color class for the border rule to apply
+                    shapeElement.classList.add(option.color);
+                }
+
+                shapeElement.dataset.shape = option.shape;
+                shapeElement.dataset.color = option.color;
+
+                shapeElement.addEventListener('click', handleOptionClick);
+                optionsContainer.appendChild(shapeElement);
             });
 
-             // Add Saturn's ring style if Saturn exists (handled by CSS ::after now)
-
-            // Add event listener for the next button
-            nextButton.addEventListener('click', generateQuestion);
-
-            // Generate the first question
-            generateQuestion();
+            canClick = true;
         }
 
-        // Start the game when the DOM is loaded
-        document.addEventListener('DOMContentLoaded', initializeGame);
+        function handleOptionClick(event) {
+            if (!canClick) return;
+            canClick = false;
+
+            const clickedElement = event.target;
+            const clickedShape = clickedElement.dataset.shape;
+            const clickedColor = clickedElement.dataset.color;
+
+            clickedElement.style.borderColor = '#333';
+
+            if (clickedShape === currentCorrectOption.shape && clickedColor === currentCorrectOption.color) {
+                score++;
+                updateScoreDisplay();
+                feedbackElement.textContent = 'Yay! Correct! 🎉';
+                feedbackElement.className = 'correct';
+                setTimeout(displayTask, 1500);
+            } else {
+                 const clickedColorName = colorNames[colors.indexOf(clickedColor)] || clickedColor;
+                feedbackElement.textContent = `Oops! That was a ${clickedColorName} ${clickedShape}. Try again.`;
+                feedbackElement.className = 'incorrect';
+                 setTimeout(() => {
+                     clickedElement.style.borderColor = 'transparent';
+                     feedbackElement.textContent = '';
+                     feedbackElement.className = '';
+                     canClick = true;
+                 }, 2500);
+            }
+        }
+
+        startButton.addEventListener('click', () => {
+            startButton.style.display = 'none';
+            instructionElement.textContent = 'Loading...';
+            score = 0;
+            updateScoreDisplay();
+            setTimeout(displayTask, 500);
+        });
+
+        updateScoreDisplay(); // Initialize score display
 
     </script>
 </body>
