@@ -74,7 +74,6 @@
              height: 60px; /* Shorter than width */
              border-radius: 50%; /* Creates oval with different width/height */
         }
-        /* --- *** NEW: Rectangle *** --- */
         .shape.rectangle {
              width: 110px; /* Distinctly wider than square */
              height: 60px; /* Shorter */
@@ -102,6 +101,10 @@
         .shape.triangle.pink { border-bottom-color: pink; }
         .shape.triangle.brown { border-bottom-color: brown; }
         .shape.triangle.gray { border-bottom-color: gray; }
+        /* *** ADDED THESE LINES - THE FIX *** */
+        .shape.triangle.cyan { border-bottom-color: cyan; }
+        .shape.triangle.magenta { border-bottom-color: magenta; }
+        /* *** END ADDED LINES *** */
 
 
         /* --- Polygon Shapes (using clip-path) --- */
@@ -131,7 +134,6 @@
         .shape.parallelogram {
             clip-path: polygon(25% 0%, 100% 0%, 75% 100%, 0% 100%);
         }
-        /* --- *** NEW: Trapezium *** --- */
         .shape.trapezium {
             /* Isosceles trapezium (like image) */
             clip-path: polygon(20% 0%, 80% 0%, 100% 100%, 0% 100%);
@@ -187,14 +189,13 @@
         const startButton = document.getElementById('start-button');
         const scoreDisplayElement = document.getElementById('score-display');
 
-        // *** UPDATED: Added new shape names ***
         const shapes = [
             'circle', 'square', 'triangle', 'hexagon', 'star', 'oval', 'pentagon',
             'octagon', 'rhombus', 'semicircle', 'parallelogram',
-            'rectangle', 'trapezium' // <-- Added Rectangle and Trapezium
+            'rectangle', 'trapezium'
         ];
-        const colors = ['red', 'blue', 'green', 'yellow', 'orange', 'purple', 'pink', 'brown', 'gray', 'cyan', 'magenta']; // Added more colors
-        // Assuming color names match CSS color values for simplicity
+        // Ensure all colors here have a corresponding CSS rule for triangles if shape='triangle'
+        const colors = ['red', 'blue', 'green', 'yellow', 'orange', 'purple', 'pink', 'brown', 'gray', 'cyan', 'magenta'];
         const colorNames = ['red', 'blue', 'green', 'yellow', 'orange', 'purple', 'pink', 'brown', 'gray', 'cyan', 'magenta'];
 
         let currentCorrectOption = null;
@@ -216,12 +217,10 @@
             }
         }
 
-        // Consider increasing numOptions if desired, e.g., generateOptions(5) or 6
         function generateOptions(numOptions = 4) {
             const options = [];
             const usedCombinations = new Set();
 
-            // Ensure the correct option is chosen first
             const correctShape = getRandomElement(shapes);
             const correctColor = getRandomElement(colors);
             const correctColorName = colorNames[colors.indexOf(correctColor)];
@@ -229,9 +228,8 @@
             options.push(currentCorrectOption);
             usedCombinations.add(`${correctShape}-${correctColor}`);
 
-            // Generate distractors
-            let attempts = 0; // Failsafe counter
-            const maxAttempts = (shapes.length * colors.length) * 2; // Generous limit
+            let attempts = 0;
+            const maxAttempts = (shapes.length * colors.length) * 2;
 
             while (options.length < numOptions && attempts < maxAttempts) {
                 const distractorShape = getRandomElement(shapes);
@@ -245,9 +243,8 @@
                 }
                 attempts++;
             }
-             // Fill remaining slots if needed (unlikely but safe)
              while (options.length < numOptions) {
-                 console.warn("Had to add a non-unique distractor option.");
+                 console.warn("Adding a non-unique distractor option to reach target count.");
                  const distractorShape = getRandomElement(shapes);
                  const distractorColor = getRandomElement(colors);
                  const distractorColorName = colorNames[colors.indexOf(distractorColor)];
@@ -255,6 +252,10 @@
              }
 
             shuffleArray(options);
+            // Defensive check (optional, but good for debugging):
+            if (options.length !== numOptions) {
+                console.error(`generateOptions failed to return ${numOptions} options! Returned:`, options);
+            }
             return options;
         }
 
@@ -264,19 +265,31 @@
             feedbackElement.className = '';
             optionsContainer.innerHTML = '';
 
-            const generatedOptions = generateOptions(4); // Can change 4 to 5 or 6 for more options
+            const generatedOptions = generateOptions(4);
+
+            // Defensive check: Ensure we actually got options
+            if (!generatedOptions || generatedOptions.length === 0) {
+                console.error("generateOptions returned no options!");
+                instructionElement.textContent = "Error generating shapes. Please refresh.";
+                return; // Stop if options failed
+            }
 
             instructionElement.textContent = `Click the ${currentCorrectOption.colorName} ${currentCorrectOption.shape}.`;
 
             generatedOptions.forEach(option => {
+                // Defensive check: Ensure option is valid
+                if (!option || !option.shape || !option.color) {
+                    console.error("Invalid option generated:", option);
+                    return; // Skip this invalid option
+                }
+
                 const shapeElement = document.createElement('div');
                 shapeElement.classList.add('shape', option.shape);
 
-                // Set background color for all shapes EXCEPT triangle
                 if (option.shape !== 'triangle') {
                     shapeElement.style.backgroundColor = option.color;
                 } else {
-                    // For triangle, add the color class for the border rule to apply
+                    // Add the color class which MUST have a corresponding CSS rule
                     shapeElement.classList.add(option.color);
                 }
 
@@ -287,6 +300,12 @@
                 optionsContainer.appendChild(shapeElement);
             });
 
+            // Final check: Ensure the correct number of children were added
+             if (optionsContainer.childElementCount !== generatedOptions.length) {
+                 console.warn(`Mismatch between generated options (${generatedOptions.length}) and added elements (${optionsContainer.childElementCount}). Check for errors during element creation/appending.`);
+             }
+
+
             canClick = true;
         }
 
@@ -295,8 +314,23 @@
             canClick = false;
 
             const clickedElement = event.target;
+            // Basic check if the clicked element is actually a shape div
+            if (!clickedElement.classList.contains('shape')) {
+                console.warn("Clicked element is not a shape:", clickedElement);
+                canClick = true; // Re-enable click immediately if it wasn't a shape
+                return;
+            }
+
             const clickedShape = clickedElement.dataset.shape;
             const clickedColor = clickedElement.dataset.color;
+
+            // Check if data attributes are present
+            if (clickedShape === undefined || clickedColor === undefined) {
+                 console.error("Clicked shape is missing data attributes:", clickedElement);
+                 canClick = true; // Re-enable click
+                 return;
+            }
+
 
             clickedElement.style.borderColor = '#333';
 
@@ -311,7 +345,10 @@
                 feedbackElement.textContent = `Oops! That was a ${clickedColorName} ${clickedShape}. Try again.`;
                 feedbackElement.className = 'incorrect';
                  setTimeout(() => {
-                     clickedElement.style.borderColor = 'transparent';
+                     // Ensure element still exists before changing style (unlikely to be removed, but safe)
+                     if (clickedElement && clickedElement.parentNode) {
+                        clickedElement.style.borderColor = 'transparent';
+                     }
                      feedbackElement.textContent = '';
                      feedbackElement.className = '';
                      canClick = true;
@@ -320,6 +357,12 @@
         }
 
         startButton.addEventListener('click', () => {
+            // Basic check for elements needed
+            if (!instructionElement || !optionsContainer || !feedbackElement || !scoreDisplayElement) {
+                console.error("One or more essential game elements not found!");
+                alert("Error initializing game. Please refresh the page.");
+                return;
+            }
             startButton.style.display = 'none';
             instructionElement.textContent = 'Loading...';
             score = 0;
